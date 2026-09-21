@@ -6,7 +6,7 @@ use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * @implements CastsAttributes<string, int|float>
+ * @implements CastsAttributes<float, int|float>
  */
 class Currency implements CastsAttributes
 {
@@ -15,19 +15,27 @@ class Currency implements CastsAttributes
      *
      * @param  array<string, mixed>  $attributes
      */
-    public function get(Model $model, string $key, mixed $value, array $attributes): string
+    public function get(Model $model, string $key, mixed $value, array $attributes): ?float
     {
-        return number_format($value / 100, 2);
+        if ($value === null) {
+            return null;
+        }
+
+        return round($value / 100, 2);
     }
 
     /**
      * Prepare the given value for storage.
      *
-     * @param  int|float  $value
+     * @param  int|float|null  $value
      * @param  array<string, mixed>  $attributes
      */
-    public function set(Model $model, string $key, mixed $value, array $attributes): int|float
+    public function set(Model $model, string $key, mixed $value, array $attributes): int|float|null
     {
+        if ($value === null) {
+            return null;
+        }
+
         return $value * 100;
     }
 }

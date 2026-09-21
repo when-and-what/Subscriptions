@@ -20,14 +20,15 @@ class DashboardController extends Controller
 
         $activeSubscriptions = Subscription::query()
             ->whereRelation('service', 'user_id', $user->id)
-            ->where('end_date', '>=', now());
+            ->where('end_date', '>=', now())
+            ->get();
 
         $activeSubscriptionCount = $activeSubscriptions->count();
 
-        $monthlyTotal = $activeSubscriptions->get()->sum(
-            fn (Subscription $subscription) => $subscription->price
+        $monthlyTotal = $activeSubscriptions->sum(
+            fn (Subscription $subscription): float => $subscription->price !== null
                 ? $subscription->price / $subscription->billing_cycle->value
-                : 0
+                : 0.0
         );
 
         $upcomingRenewals = Subscription::query()
