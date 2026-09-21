@@ -34,7 +34,7 @@ class DashboardController extends Controller
         $upcomingRenewals = Subscription::query()
             ->whereRelation('service', 'user_id', $user->id)
             ->where('end_date', '>=', now())
-            ->where('end_date', '<=', now()->plus(months: 1))
+            ->where('end_date', '<=', now()->plus(days: 10))
             ->with('service')
             ->orderBy('end_date', 'asc')
             ->get();
