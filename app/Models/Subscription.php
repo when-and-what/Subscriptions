@@ -32,6 +32,7 @@ class Subscription extends Model
         'price' => Currency::class,
     ];
 
+    /** @return BelongsTo<Service, $this> */
     public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class);
