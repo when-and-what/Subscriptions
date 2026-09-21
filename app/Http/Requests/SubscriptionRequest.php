@@ -34,6 +34,7 @@ class SubscriptionRequest extends FormRequest
             'price' => 'nullable|decimal:0,2',
             'billing_cycle' => 'integer',
             'auto_renew' => 'boolean',
+            'note' => 'nullable',
         ];
     }
 }

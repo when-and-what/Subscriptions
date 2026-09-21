@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Service;
+use App\Models\Subscription;
 use App\Models\User;
 
 test('guests are redirected to the login page', function () {
@@ -20,6 +21,66 @@ test('a user can list their own services', function () {
 
     $response->assertOk();
     $response->assertSee($service->name);
+});
+
+test('a service with an active subscription shows an active badge', function () {
+    $user = User::factory()->create();
+    $service = Service::factory()->for($user)->create();
+    Subscription::factory()->for($service)->create(['end_date' => now()->addMonth()]);
+
+    $response = $this->actingAs($user)->get(route('services.index'));
+
+    $response->assertOk();
+    $response->assertSeeText('Active');
+    $response->assertDontSeeText('Expired');
+});
+
+test('a service with an expired subscription shows an expired badge', function () {
+    $user = User::factory()->create();
+    $service = Service::factory()->for($user)->create();
+    Subscription::factory()->for($service)->create(['end_date' => now()->subMonth()]);
+
+    $response = $this->actingAs($user)->get(route('services.index'));
+
+    $response->assertOk();
+    $response->assertSeeText('Expired');
+    $response->assertDontSeeText('Active');
+});
+
+test('a service without a subscription shows a no subscription badge', function () {
+    $user = User::factory()->create();
+    Service::factory()->for($user)->create();
+
+    $response = $this->actingAs($user)->get(route('services.index'));
+
+    $response->assertOk();
+    $response->assertSeeText('No subscription');
+});
+
+test('a user can view their own service with its subscription history', function () {
+    $user = User::factory()->create();
+    $service = Service::factory()->for($user)->create();
+    $past = Subscription::factory()->for($service)->create([
+        'start_date' => now()->subYear(),
+        'end_date' => now()->subMonths(6),
+    ]);
+    $current = Subscription::factory()->for($service)->create([
+        'start_date' => now()->subMonths(6),
+        'end_date' => now()->addMonth(),
+    ]);
+
+    $response = $this->actingAs($user)->get(route('services.show', $service));
+
+    $response->assertOk();
+    $response->assertSeeTextInOrder([$current->start_date->format('M j, Y'), $past->start_date->format('M j, Y')]);
+});
+
+test('a user cannot view another user\'s service', function () {
+    $owner = User::factory()->create();
+    $intruder = User::factory()->create();
+    $service = Service::factory()->for($owner)->create();
+
+    $this->actingAs($intruder)->get(route('services.show', $service))->assertForbidden();
 });
 
 test('a user can view the create and edit forms', function () {

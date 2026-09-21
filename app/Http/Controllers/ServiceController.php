@@ -15,12 +15,14 @@ class ServiceController extends Controller
      */
     public function index(): View
     {
-        $services = auth()->user()->services()
-            ->withCount('subscriptions')
+        $services = Service::whereBelongsTo(auth()->user())
+            ->with('subscription')
             ->orderBy('name')
-            ->paginate(9);
+            ->paginate(12);
 
-        return view('services.index', ['services' => $services]);
+        return view('services.index', [
+            'services' => $services,
+        ]);
     }
 
     /**
@@ -39,6 +41,20 @@ class ServiceController extends Controller
         auth()->user()->services()->create($request->validated());
 
         return redirect()->route('services.index')->with('success', 'Service created.');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Service $service): View
+    {
+        Gate::authorize('view', $service);
+
+        $service->load(['subscriptions' => fn ($query) => $query->orderByDesc('start_date')]);
+
+        return view('services.show', [
+            'service' => $service,
+        ]);
     }
 
     /**

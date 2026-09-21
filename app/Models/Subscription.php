@@ -22,6 +22,7 @@ class Subscription extends Model
         'price',
         'billing_cycle',
         'auto_renew',
+        'note',
     ];
 
     protected $casts = [

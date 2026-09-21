@@ -7,16 +7,6 @@
                 @csrf
                 @method('PUT')
 
-                @if ($errors->any())
-    <div class="alert alert-danger">
-        <ul>
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
-
                 <x-service-select :selected="old('service_id', $subscription->service_id)" />
 
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -35,6 +25,8 @@
                         @endforeach
                     </flux:select>
                 </div>
+
+                <flux:input name="note" label="{{ __('Note (optional)') }}" value="{{ old('note', $subscription->note) }}" placeholder="email@example.com" />
 
                 <input type="hidden" name="auto_renew" value="0">
                 <flux:switch name="auto_renew" :checked="(bool) old('auto_renew', $subscription->auto_renew)" label="{{ __('Auto-renews') }}" value="1" />

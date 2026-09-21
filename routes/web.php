@@ -10,7 +10,7 @@ Route::view('/', 'welcome')->name('home');
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
-    Route::resource('services', ServiceController::class)->except(['show']);
+    Route::resource('services', ServiceController::class);
     Route::resource('subscriptions', SubscriptionController::class)->except(['show']);
 });
 

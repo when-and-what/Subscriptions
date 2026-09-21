@@ -2,7 +2,7 @@
     <footer class="grid grid-cols-1 gap-8 py-8 md:grid-cols-3">
         <div>
             <flux:heading>{{ config('app.name') }}</flux:heading>
-            <flux:text class="mt-1">Track every subscription in one place.</flux:text>
+            <flux:text class="mt-1">Keep track of what subscriptions you have and when they renew.</flux:text>
         </div>
 
         <nav class="flex flex-col gap-2 md:items-center">

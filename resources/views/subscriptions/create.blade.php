@@ -5,15 +5,6 @@
         <flux:card class="max-w-xl">
             <form method="POST" action="{{ route('subscriptions.store') }}" class="flex flex-col gap-6">
                 @csrf
-                @if ($errors->any())
-    <div class="alert alert-danger">
-        <ul>
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
 
                 <x-service-select />
 
@@ -33,6 +24,8 @@
                         @endforeach
                     </flux:select>
                 </div>
+
+                <flux:input name="note" label="{{ __('Note (optional)') }}" value="{{ old('note') }}" placeholder="email@example.com" />
 
                 <input type="hidden" name="auto_renew" value="0">
                 <flux:switch name="auto_renew" :checked="(bool) old('auto_renew', true)" label="{{ __('Auto-renews') }}" value="1" />

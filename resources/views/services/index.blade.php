@@ -16,11 +16,25 @@
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 @foreach ($services as $service)
                     <flux:card class="flex flex-col gap-3">
-                        <div class="flex items-start justify-between gap-2">
-                            <flux:heading size="lg">{{ $service->name }}</flux:heading>
-                            <flux:badge color="zinc" size="sm">
-                                {{ $service->subscriptions_count }} {{ Str::plural('subscription', $service->subscriptions_count) }}
-                            </flux:badge>
+                        <div class="relative flex items-start justify-between gap-2">
+                            <flux:heading size="lg">
+                                <a href="{{ route('services.show', $service) }}" wire:navigate class="after:absolute after:inset-0 after:content-['']">
+                                    {{ $service->name }}
+                                </a>
+                            </flux:heading>
+                            <div class="flex items-center gap-2">
+                                @if (! $service->subscription)
+                                    <flux:badge color="zinc" size="sm">{{ __('No subscription') }}</flux:badge>
+                                @elseif ($service->is_active)
+                                    <flux:badge color="teal" size="sm">
+                                        {{ $service->subscription->end_date ? __('Active · :date', ['date' => $service->subscription->end_date->format('M jS')]) : __('Active') }}
+                                    </flux:badge>
+                                @else
+                                    <flux:badge color="red" size="sm">
+                                        {{ __('Expired · :date', ['date' => $service->subscription->end_date->format('M jS')]) }}
+                                    </flux:badge>
+                                @endif
+                            </div>
                         </div>
 
                         @if ($service->url)
