@@ -37,10 +37,6 @@
                             </div>
                         </div>
 
-                        @if ($service->url)
-                            <flux:text class="truncate">{{ $service->url }}</flux:text>
-                        @endif
-
                         <div class="mt-2 flex items-center gap-2">
                             <flux:button variant="ghost" size="sm" icon="pencil" :href="route('services.edit', $service)" wire:navigate>
                                 {{ __('Edit') }}
