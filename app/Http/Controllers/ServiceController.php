@@ -18,7 +18,7 @@ class ServiceController extends Controller
         $services = Service::whereBelongsTo(auth()->user())
             ->with('subscription')
             ->orderBy('name')
-            ->paginate(12);
+            ->paginate(18);
 
         return view('services.index', [
             'services' => $services,

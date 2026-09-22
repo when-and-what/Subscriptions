@@ -19,7 +19,7 @@ class SubscriptionController extends Controller
             ->whereRelation('service', 'user_id', auth()->id())
             ->with('service')
             ->orderBy('end_date')
-            ->paginate(9);
+            ->paginate(12);
 
         return view('subscriptions.index', ['subscriptions' => $subscriptions]);
     }
