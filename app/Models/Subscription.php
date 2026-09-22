@@ -47,6 +47,7 @@ class Subscription extends Model
         return $this->belongsTo(Subscription::class, 'renewed_subscription_id');
     }
 
+    /** @param  Builder<Subscription>  $query */
     #[Scope]
     protected function autoRenew(Builder $query): void
     {
