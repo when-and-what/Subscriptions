@@ -15,7 +15,7 @@
 
             <flux:card>
                 <flux:text>{{ __('Estimated Monthly Cost') }}</flux:text>
-                <flux:heading size="2xl">{{ \Illuminate\Support\Number::currency($monthlyTotal) }}</flux:heading>
+                <flux:heading size="2xl">{{ \Illuminate\Support\Number::currency($monthlyTotal, '', null, 0) }}</flux:heading>
             </flux:card>
         </div>
 
