@@ -46,7 +46,7 @@
                 @endforeach
             </div>
 
-            <flux:pagination :paginator="$services" />
+            {{ $services->links('pagination.flux') }}
         @endif
     </div>
 </x-layouts::app>

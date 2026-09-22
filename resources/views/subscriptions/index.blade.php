@@ -52,7 +52,7 @@
                 @endforeach
             </div>
 
-            <flux:pagination :paginator="$subscriptions" />
+            {{ $subscriptions->links('pagination.flux') }}
         @endif
     </div>
 </x-layouts::app>

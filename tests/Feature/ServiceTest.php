@@ -23,6 +23,16 @@ test('a user can list their own services', function () {
     $response->assertSee($service->name);
 });
 
+test('service pagination links point to the next page', function () {
+    $user = User::factory()->create();
+    Service::factory()->for($user)->count(13)->create();
+
+    $response = $this->actingAs($user)->get(route('services.index'));
+
+    $response->assertOk();
+    $response->assertSee(route('services.index').'?page=2', false);
+});
+
 test('a service with an active subscription shows an active badge', function () {
     $user = User::factory()->create();
     $service = Service::factory()->for($user)->create();
