@@ -28,7 +28,7 @@ test('a user can list subscriptions for their own services', function () {
 test('subscription pagination links point to the next page', function () {
     $user = User::factory()->create();
     $service = Service::factory()->for($user)->create();
-    Subscription::factory()->for($service)->count(10)->create();
+    Subscription::factory()->for($service)->count(20)->create();
 
     $response = $this->actingAs($user)->get(route('subscriptions.index'));
 

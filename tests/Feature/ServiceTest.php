@@ -25,7 +25,7 @@ test('a user can list their own services', function () {
 
 test('service pagination links point to the next page', function () {
     $user = User::factory()->create();
-    Service::factory()->for($user)->count(13)->create();
+    Service::factory()->for($user)->count(20)->create();
 
     $response = $this->actingAs($user)->get(route('services.index'));
 
