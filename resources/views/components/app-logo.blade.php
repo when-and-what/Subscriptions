@@ -1,9 +1,10 @@
 @props([
     'sidebar' => false,
+    'name' => config('app.name', 'Laravel'),
 ])
 
 @if($sidebar)
-    <flux:sidebar.brand :name="config('app.name', 'Laravel')" :logo="asset('logo.png')" alt="{{ config('app.name') }}" {{ $attributes }} />
+    <flux:sidebar.brand :name="$name" :logo="asset('logo.png')" alt="{{ config('app.name') }}" {{ $attributes }} />
 @else
-    <flux:brand :name="config('app.name', 'Laravel')" :logo="asset('logo.png')" alt="{{ config('app.name') }}" {{ $attributes }} />
+    <flux:brand :name="$name" :logo="asset('logo.png')" alt="{{ config('app.name') }}" {{ $attributes }} />
 @endif
