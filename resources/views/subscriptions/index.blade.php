@@ -6,6 +6,10 @@
             </flux:button>
         </x-page-header>
 
+        @if ($categories->isNotEmpty())
+            <x-category-filter :categories="$categories" route="subscriptions.index" />
+        @endif
+
         @if ($subscriptions->isEmpty())
             <flux:callout icon="credit-card" :heading="__('No subscriptions yet')" :text="__('Track a subscription against one of your services to see it here.')">
                 <x-slot name="actions">
@@ -17,11 +21,23 @@
                 @foreach ($subscriptions as $subscription)
                     <flux:card class="flex flex-col gap-3">
                         <div class="flex items-start justify-between gap-2">
-                            <flux:heading size="lg">{{ $subscription->service->name }}</flux:heading>
+                            <flux:heading size="lg">
+                                <a href="{{ route('services.show', $subscription->service) }}" wire:navigate class="after:absolute after:inset-0 after:content-['']">
+                                    {{ $subscription->service->name }}
+                                </a>
+                            </flux:heading>
                             @if ($subscription->auto_renew)
                                 <flux:badge color="teal" size="sm">{{ __('Auto-renews') }}</flux:badge>
                             @endif
                         </div>
+
+                        @if ($subscription->service->categories->isNotEmpty())
+                            <div class="flex flex-wrap gap-1">
+                                @foreach ($subscription->service->categories as $category)
+                                    <flux:badge size="sm" color="zinc">{{ $category->name }}</flux:badge>
+                                @endforeach
+                            </div>
+                        @endif
 
                         <div class="flex flex-col gap-1">
                             <flux:text>

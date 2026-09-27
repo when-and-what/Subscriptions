@@ -15,13 +15,20 @@ class SubscriptionController extends Controller
      */
     public function index(): View
     {
+        $categoryId = request()->integer('category') ?: null;
+
         $subscriptions = Subscription::query()
             ->whereRelation('service', 'user_id', auth()->id())
-            ->with('service')
+            ->with('service.categories')
+            ->when($categoryId, fn ($query) => $query->whereRelation('service.categories', 'categories.id', $categoryId))
             ->orderBy('end_date')
-            ->paginate(12);
+            ->paginate(12)
+            ->withQueryString();
 
-        return view('subscriptions.index', ['subscriptions' => $subscriptions]);
+        return view('subscriptions.index', [
+            'subscriptions' => $subscriptions,
+            'categories' => auth()->user()->categories()->orderBy('name')->get(),
+        ]);
     }
 
     /**

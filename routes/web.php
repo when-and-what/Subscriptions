@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SubscriptionController;
@@ -11,6 +12,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('services', ServiceController::class);
     Route::resource('subscriptions', SubscriptionController::class)->except(['show']);
+    Route::resource('categories', CategoryController::class)->except('show');
 });
 
 require __DIR__.'/settings.php';

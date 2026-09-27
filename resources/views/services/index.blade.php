@@ -6,6 +6,10 @@
             </flux:button>
         </x-page-header>
 
+        @if ($categories->isNotEmpty())
+            <x-category-filter :categories="$categories" route="services.index" />
+        @endif
+
         @if ($services->isEmpty())
             <flux:callout icon="building-storefront" :heading="__('No services yet')" :text="__('Add the subscription providers you want to track, like Netflix or Spotify.')">
                 <x-slot name="actions">
@@ -36,6 +40,14 @@
                                 @endif
                             </div>
                         </div>
+
+                        @if ($service->categories->isNotEmpty())
+                            <div class="flex flex-wrap gap-1">
+                                @foreach ($service->categories as $category)
+                                    <flux:badge size="sm" color="zinc">{{ $category->name }}</flux:badge>
+                                @endforeach
+                            </div>
+                        @endif
 
                         <div class="mt-2 flex items-center gap-2">
                             <flux:button variant="ghost" size="sm" icon="pencil" :href="route('services.edit', $service)" wire:navigate>

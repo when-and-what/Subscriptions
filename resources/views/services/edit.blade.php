@@ -11,6 +11,8 @@
 
                 <flux:input name="url" type="url" label="{{ __('Website (optional)') }}" value="{{ old('url', $service->url) }}" />
 
+                <x-category-select :selected="$service->categories->pluck('id')" />
+
                 <div class="flex items-center justify-between gap-2">
                     <div class="flex items-center gap-2">
                         <flux:button type="submit" variant="primary">{{ __('Save Changes') }}</flux:button>

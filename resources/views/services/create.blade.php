@@ -10,6 +10,8 @@
 
                 <flux:input name="url" type="url" label="{{ __('Website (optional)') }}" placeholder="https://netflix.com" value="{{ old('url') }}" />
 
+                <x-category-select />
+
                 <div class="flex items-center gap-2">
                     <flux:button type="submit" variant="primary">{{ __('Create Service') }}</flux:button>
                     <flux:button variant="ghost" :href="route('services.index')" wire:navigate>{{ __('Cancel') }}</flux:button>

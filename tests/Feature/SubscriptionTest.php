@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\BillingCycle;
+use App\Models\Category;
 use App\Models\Service;
 use App\Models\Subscription;
 use App\Models\User;
@@ -23,6 +24,37 @@ test('a user can list subscriptions for their own services', function () {
 
     $response->assertOk();
     $response->assertSee($service->name);
+});
+
+test('a subscription card shows its service\'s category badges', function () {
+    $user = User::factory()->create();
+    $service = Service::factory()->for($user)->create();
+    $category = Category::factory()->for($user)->create(['name' => 'Streaming']);
+    $service->categories()->attach($category);
+    Subscription::factory()->for($service)->create();
+
+    $response = $this->actingAs($user)->get(route('subscriptions.index'));
+
+    $response->assertOk();
+    $response->assertSee('Streaming');
+});
+
+test('filtering subscriptions by category only shows subscriptions for matching services', function () {
+    $user = User::factory()->create();
+    $streaming = Category::factory()->for($user)->create(['name' => 'Streaming']);
+    $software = Category::factory()->for($user)->create(['name' => 'Software']);
+    $netflix = Service::factory()->for($user)->create(['name' => 'Netflix']);
+    $github = Service::factory()->for($user)->create(['name' => 'GitHub']);
+    $netflix->categories()->attach($streaming);
+    $github->categories()->attach($software);
+    Subscription::factory()->for($netflix)->create();
+    Subscription::factory()->for($github)->create();
+
+    $response = $this->actingAs($user)->get(route('subscriptions.index', ['category' => $streaming->id]));
+
+    $response->assertOk();
+    $response->assertSee('Netflix');
+    $response->assertDontSee('GitHub');
 });
 
 test('subscription pagination links point to the next page', function () {

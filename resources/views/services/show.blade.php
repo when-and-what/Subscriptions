@@ -1,7 +1,7 @@
 <x-layouts::app :title="$service->name">
     <div class="flex flex-col gap-6">
-        <flux:button variant="ghost" size="sm" icon="arrow-left" :href="route('services.index')" wire:navigate class="self-start">
-            {{ __('Back to Services') }}
+        <flux:button variant="ghost" size="sm" icon="arrow-left" :href="$backUrl" wire:navigate class="self-start">
+            {{ __($backLabel) }}
         </flux:button>
 
         <x-page-header :title="$service->name" :subtitle="$service->url">
