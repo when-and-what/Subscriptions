@@ -20,7 +20,7 @@
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 @foreach ($subscriptions as $subscription)
                     <flux:card class="flex flex-col gap-3">
-                        <div class="flex items-start justify-between gap-2">
+                        <div class="relative flex items-start justify-between gap-2">
                             <flux:heading size="lg">
                                 <a href="{{ route('services.show', $subscription->service) }}" wire:navigate class="after:absolute after:inset-0 after:content-['']">
                                     {{ $subscription->service->name }}
