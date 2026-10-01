@@ -19,6 +19,7 @@ class SubscriptionController extends Controller
 
         $subscriptions = Subscription::query()
             ->whereRelation('service', 'user_id', auth()->id())
+            ->WhereDate('end_date', '>=', today())
             ->with('service.categories')
             ->when($categoryId, fn ($query) => $query->whereRelation('service.categories', 'categories.id', $categoryId))
             ->orderBy('end_date')

@@ -17,7 +17,7 @@ test('guests are redirected to the login page', function () {
 test('a user can list subscriptions for their own services', function () {
     $user = User::factory()->create();
     $service = Service::factory()->for($user)->create();
-    $subscription = Subscription::factory()->for($service)->create();
+    $subscription = Subscription::factory()->for($service)->create(['end_date' => now()->addMonth()]);
     Subscription::factory()->create(); // another user's subscription
 
     $response = $this->actingAs($user)->get(route('subscriptions.index'));
@@ -31,7 +31,7 @@ test('a subscription card shows its service\'s category badges', function () {
     $service = Service::factory()->for($user)->create();
     $category = Category::factory()->for($user)->create(['name' => 'Streaming']);
     $service->categories()->attach($category);
-    Subscription::factory()->for($service)->create();
+    Subscription::factory()->for($service)->create(['end_date' => now()->addMonth()]);
 
     $response = $this->actingAs($user)->get(route('subscriptions.index'));
 
@@ -47,8 +47,8 @@ test('filtering subscriptions by category only shows subscriptions for matching 
     $github = Service::factory()->for($user)->create(['name' => 'GitHub']);
     $netflix->categories()->attach($streaming);
     $github->categories()->attach($software);
-    Subscription::factory()->for($netflix)->create();
-    Subscription::factory()->for($github)->create();
+    Subscription::factory()->for($netflix)->create(['end_date' => now()->addMonth()]);
+    Subscription::factory()->for($github)->create(['end_date' => now()->addMonth()]);
 
     $response = $this->actingAs($user)->get(route('subscriptions.index', ['category' => $streaming->id]));
 
@@ -60,12 +60,26 @@ test('filtering subscriptions by category only shows subscriptions for matching 
 test('subscription pagination links point to the next page', function () {
     $user = User::factory()->create();
     $service = Service::factory()->for($user)->create();
-    Subscription::factory()->for($service)->count(20)->create();
+    Subscription::factory()->for($service)->count(20)->create(['end_date' => now()->addMonth()]);
 
     $response = $this->actingAs($user)->get(route('subscriptions.index'));
 
     $response->assertOk();
     $response->assertSee(route('subscriptions.index').'?page=2', false);
+});
+
+test('expired subscriptions are excluded from the subscription list', function () {
+    $user = User::factory()->create();
+    $expired = Service::factory()->for($user)->create(['name' => 'Expired Service']);
+    $endsToday = Service::factory()->for($user)->create(['name' => 'Ends Today Service']);
+    Subscription::factory()->for($expired)->create(['end_date' => now()->subDay()]);
+    Subscription::factory()->for($endsToday)->create(['end_date' => now()]);
+
+    $response = $this->actingAs($user)->get(route('subscriptions.index'));
+
+    $response->assertOk();
+    $response->assertDontSee('Expired Service');
+    $response->assertSee('Ends Today Service');
 });
 
 test('a user can view the create and edit forms', function () {
