@@ -31,7 +31,7 @@
                                     <flux:badge color="zinc" size="sm">{{ __('No subscription') }}</flux:badge>
                                 @elseif ($service->is_active)
                                     <flux:badge color="teal" size="sm">
-                                        {{ $service->subscription->end_date ? __('Active · :date', ['date' => $service->subscription->end_date->format('M jS')]) : __('Active') }}
+                                        {{ $service->subscription->end_date ? __(':date', ['date' => $service->subscription->end_date->format('M jS')]) : __('Active') }}
                                     </flux:badge>
                                 @else
                                     <flux:badge color="red" size="sm">
