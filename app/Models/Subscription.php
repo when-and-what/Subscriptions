@@ -57,7 +57,7 @@ class Subscription extends Model
      */
     public function hasPriceIncreaseAtNextRenewal(): bool
     {
-        if ($this->new_price === null || $this->new_price_date === null || $this->end_date === null) {
+        if ($this->new_price === null || $this->new_price_date === null) {
             return false;
         }
 

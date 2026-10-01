@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('service_id')->constrained('services');
             $table->date('start_date');
-            $table->date('end_date')->nullable();
+            $table->date('end_date');
             $table->integer('price')->nullable();
             $table->tinyInteger('billing_cycle')->default(1);
             $table->boolean('auto_renew')->default(false);

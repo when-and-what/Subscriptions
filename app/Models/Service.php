@@ -51,7 +51,7 @@ class Service extends Model
     {
         return Attribute::make(
             get: fn (): bool => $this->subscription !== null
-                && (! $this->subscription->end_date || $this->subscription->end_date->greaterThanOrEqualTo(today())),
+                && $this->subscription->end_date->greaterThanOrEqualTo(today()),
         );
     }
 }

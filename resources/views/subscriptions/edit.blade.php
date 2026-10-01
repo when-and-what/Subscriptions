@@ -11,7 +11,7 @@
 
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <flux:input type="date" name="start_date" label="{{ __('Start date') }}" value="{{ old('start_date', $subscription->start_date?->toDateString()) }}" />
-                    <flux:input type="date" name="end_date" label="{{ __('End Date') }}" value="{{ old('end_date', $subscription->end_date?->toDateString()) }}" />
+                    <flux:input type="date" name="end_date" label="{{ __('End Date') }}" value="{{ old('end_date', $subscription->end_date->toDateString()) }}" />
                 </div>
 
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">

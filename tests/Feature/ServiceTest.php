@@ -73,15 +73,15 @@ test('service pagination links point to the next page', function () {
     $response->assertSee(route('services.index').'?page=2', false);
 });
 
-test('a service with an active subscription shows an active badge', function () {
+test('a service with an active subscription shows its end date badge', function () {
     $user = User::factory()->create();
     $service = Service::factory()->for($user)->create();
-    Subscription::factory()->for($service)->create(['end_date' => now()->addMonth()]);
+    $subscription = Subscription::factory()->for($service)->create(['end_date' => now()->addMonth()]);
 
     $response = $this->actingAs($user)->get(route('services.index'));
 
     $response->assertOk();
-    $response->assertSeeText('Active');
+    $response->assertSeeText($subscription->end_date->format('M jS'));
     $response->assertDontSeeText('Expired');
 });
 
