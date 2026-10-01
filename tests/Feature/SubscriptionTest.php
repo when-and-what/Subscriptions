@@ -161,6 +161,128 @@ test('a user can update their own subscription', function () {
     expect($subscription->auto_renew)->toBeFalse();
 });
 
+test('a user can create a subscription with a new price and effective date', function () {
+    $user = User::factory()->create();
+    $service = Service::factory()->for($user)->create();
+
+    $response = $this->actingAs($user)->post(route('subscriptions.store'), [
+        'service_id' => $service->id,
+        'start_date' => '2026-01-01',
+        'end_date' => '2026-02-01',
+        'price' => '10.00',
+        'billing_cycle' => 1,
+        'new_price' => '12.50',
+        'new_price_date' => '2026-01-15',
+    ]);
+
+    $response->assertRedirect(route('subscriptions.index'));
+
+    $subscription = Subscription::where('service_id', $service->id)->first();
+    expect($subscription)->not->toBeNull();
+    expect($subscription->new_price)->toBe(12.50);
+    expect($subscription->new_price_date->toDateString())->toBe('2026-01-15');
+});
+
+test('a user can update the new price and effective date of their own subscription', function () {
+    $user = User::factory()->create();
+    $service = Service::factory()->for($user)->create();
+    $subscription = Subscription::factory()->for($service)->create();
+
+    $response = $this->actingAs($user)->put(route('subscriptions.update', $subscription), [
+        'service_id' => $service->id,
+        'new_price' => '12.50',
+        'new_price_date' => '2026-01-15',
+    ]);
+
+    $response->assertRedirect(route('subscriptions.index'));
+    expect($subscription->refresh()->new_price)->toBe(12.50);
+    expect($subscription->new_price_date->toDateString())->toBe('2026-01-15');
+});
+
+test('a user can clear the new price and effective date of their own subscription', function () {
+    $user = User::factory()->create();
+    $service = Service::factory()->for($user)->create();
+    $subscription = Subscription::factory()->for($service)->create([
+        'new_price' => 12.50,
+        'new_price_date' => '2026-01-15',
+    ]);
+
+    $response = $this->actingAs($user)->put(route('subscriptions.update', $subscription), [
+        'service_id' => $service->id,
+        'new_price' => '',
+        'new_price_date' => '',
+    ]);
+
+    $response->assertRedirect(route('subscriptions.index'));
+    expect($subscription->refresh()->new_price)->toBeNull();
+    expect($subscription->new_price_date)->toBeNull();
+});
+
+test('a new price without an effective date is rejected', function () {
+    $user = User::factory()->create();
+    $service = Service::factory()->for($user)->create();
+
+    $response = $this->actingAs($user)->post(route('subscriptions.store'), [
+        'service_id' => $service->id,
+        'new_price' => '12.50',
+        'new_price_date' => '',
+    ]);
+
+    $response->assertInvalid(['new_price_date' => 'required when new price is present']);
+    expect(Subscription::count())->toBe(0);
+});
+
+test('an effective date without a new price is rejected', function () {
+    $user = User::factory()->create();
+    $service = Service::factory()->for($user)->create();
+
+    $response = $this->actingAs($user)->post(route('subscriptions.store'), [
+        'service_id' => $service->id,
+        'new_price' => '',
+        'new_price_date' => '2026-01-15',
+    ]);
+
+    $response->assertInvalid(['new_price' => 'required when new price date is present']);
+    expect(Subscription::count())->toBe(0);
+});
+
+test('an effective date that is not after the start date is rejected', function (string $newPriceDate) {
+    $user = User::factory()->create();
+    $service = Service::factory()->for($user)->create();
+
+    $response = $this->actingAs($user)->post(route('subscriptions.store'), [
+        'service_id' => $service->id,
+        'start_date' => '2026-01-15',
+        'new_price' => '12.50',
+        'new_price_date' => $newPriceDate,
+    ]);
+
+    $response->assertInvalid(['new_price_date' => 'must be a date after start date']);
+    expect(Subscription::count())->toBe(0);
+})->with([
+    'before the start date' => '2026-01-14',
+    'on the start date' => '2026-01-15',
+]);
+
+test('an invalid new price or effective date is rejected', function (string $field, string $value) {
+    $user = User::factory()->create();
+    $service = Service::factory()->for($user)->create();
+
+    $response = $this->actingAs($user)->post(route('subscriptions.store'), [
+        'service_id' => $service->id,
+        'new_price' => '12.50',
+        'new_price_date' => '2026-01-15',
+        $field => $value,
+    ]);
+
+    $response->assertInvalid([$field]);
+    expect(Subscription::count())->toBe(0);
+})->with([
+    'new price with more than two decimals' => ['new_price', '12.505'],
+    'non-numeric new price' => ['new_price', 'abc'],
+    'malformed effective date' => ['new_price_date', 'not-a-date'],
+]);
+
 test('a user can delete their own subscription', function () {
     $user = User::factory()->create();
     $service = Service::factory()->for($user)->create();

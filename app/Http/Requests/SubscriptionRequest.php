@@ -29,12 +29,14 @@ class SubscriptionRequest extends FormRequest
                 'integer',
                 Rule::exists('services', 'id')->where('user_id', $this->user()->id),
             ],
-            'start_date' => 'date',
-            'end_date' => 'date',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
             'price' => 'nullable|decimal:0,2',
             'billing_cycle' => 'integer',
             'auto_renew' => 'boolean',
             'note' => 'nullable',
+            'new_price' => 'nullable|decimal:0,2|required_with:new_price_date',
+            'new_price_date' => 'nullable|date|required_with:new_price|after:start_date',
         ];
     }
 }

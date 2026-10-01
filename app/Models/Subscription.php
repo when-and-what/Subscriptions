@@ -25,6 +25,8 @@ class Subscription extends Model
         'billing_cycle',
         'auto_renew',
         'note',
+        'new_price',
+        'new_price_date',
     ];
 
     protected $casts = [
@@ -33,6 +35,8 @@ class Subscription extends Model
         'end_date' => 'date',
         'start_date' => 'date',
         'price' => Currency::class,
+        'new_price' => Currency::class,
+        'new_price_date' => 'date',
     ];
 
     /** @return BelongsTo<Service, $this> */
@@ -45,6 +49,18 @@ class Subscription extends Model
     public function renewedSubscription(): BelongsTo
     {
         return $this->belongsTo(Subscription::class, 'renewed_subscription_id');
+    }
+
+    /**
+     * Determine whether a price increase takes effect on or before the next renewal.
+     */
+    public function hasPriceIncreaseAtNextRenewal(): bool
+    {
+        if ($this->new_price === null || $this->new_price_date === null || $this->end_date === null) {
+            return false;
+        }
+
+        return $this->new_price_date->lessThanOrEqualTo($this->end_date);
     }
 
     /** @param  Builder<Subscription>  $query */

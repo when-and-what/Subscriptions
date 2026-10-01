@@ -20,14 +20,24 @@ class RenewSubscription extends Command
             ->whereNull('renewed_subscription_id')
             ->whereDate('end_date', '<=', now())
             ->each(function (Subscription $subscription): void {
+                if ($subscription->hasPriceIncreaseAtNextRenewal()) {
+                    $price = $subscription->new_price;
+                    $newPrice = $newPriceDate = null;
+                } else {
+                    $price = $subscription->price;
+                    $newPrice = $subscription->new_price;
+                    $newPriceDate = $subscription->new_price_date;
+                }
                 $renewal = Subscription::create([
                     'service_id' => $subscription->service_id,
                     'start_date' => $subscription->end_date,
                     'end_date' => $subscription->end_date->copy()->addMonths($subscription->billing_cycle->value),
-                    'price' => $subscription->price,
+                    'price' => $price,
                     'billing_cycle' => $subscription->billing_cycle,
                     'auto_renew' => $subscription->auto_renew,
                     'note' => $subscription->note,
+                    'new_price' => $newPrice,
+                    'new_price_date' => $newPriceDate,
                 ]);
 
                 $subscription->renewed_subscription_id = $renewal->id;

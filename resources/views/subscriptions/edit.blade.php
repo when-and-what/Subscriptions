@@ -11,11 +11,14 @@
 
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <flux:input type="date" name="start_date" label="{{ __('Start date') }}" value="{{ old('start_date', $subscription->start_date?->toDateString()) }}" />
-                    <flux:input type="date" name="end_date" label="{{ __('Next renewal (optional)') }}" value="{{ old('end_date', $subscription->end_date?->toDateString()) }}" />
+                    <flux:input type="date" name="end_date" label="{{ __('End Date') }}" value="{{ old('end_date', $subscription->end_date?->toDateString()) }}" />
                 </div>
 
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    <flux:input type="number" step="0.01" min="0" name="price" label="{{ __('Price (optional)') }}" value="{{ old('price', $subscription->price) }}" />
+                    <flux:input.group name="price" label="{{ __('Price (optional)') }}">
+                        <flux:input.group.prefix>$</flux:input.group.prefix>
+                        <flux:input type="number" step="0.01" min="0" name="price" value="{{ old('price', $subscription->price) }}" />
+                    </flux:input.group>
 
                     <flux:select name="billing_cycle" label="{{ __('Billing cycle') }}">
                         @foreach (\App\Enums\BillingCycle::cases() as $cycle)
@@ -24,6 +27,14 @@
                             </option>
                         @endforeach
                     </flux:select>
+                </div>
+
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <flux:input.group name="new_price" label="{{ __('New Price (optional)') }}">
+                        <flux:input.group.prefix>$</flux:input.group.prefix>
+                        <flux:input type="number" step="0.01" min="0" name="new_price" value="{{ old('new_price', $subscription->new_price) }}" />
+                    </flux:input.group>
+                    <flux:input type="date" name="new_price_date" label="{{ __('New Price Effective Date') }}" value="{{ old('new_price_date', $subscription->new_price_date?->toDateString()) }}" />
                 </div>
 
                 <flux:input name="note" label="{{ __('Note (optional)') }}" value="{{ old('note', $subscription->note) }}" placeholder="email@example.com" />

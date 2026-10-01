@@ -9,8 +9,8 @@
             </flux:card>
 
             <flux:card>
-                <flux:text>{{ __('Expires This Month') }}</flux:text>
-                <flux:heading size="2xl">{{ $thisMonth }}</flux:heading>
+                <flux:text>{{ __('Expires This Week') }}</flux:text>
+                <flux:heading size="2xl">{{ $thisWeek }}</flux:heading>
             </flux:card>
 
             <flux:card>
@@ -38,8 +38,15 @@
                             <flux:table.row>
                                 <flux:table.cell>{{ $subscription->service->name }}</flux:table.cell>
                                 <flux:table.cell>{{ $subscription->end_date->format('M j, Y') }}</flux:table.cell>
-                                <flux:table.cell>
-                                    {{ $subscription->price ? \Illuminate\Support\Number::currency($subscription->price) : '—' }}
+                                <flux:table.cell @class(['text-red-600! dark:text-red-400!' => $subscription->hasPriceIncreaseAtNextRenewal()])>
+                                    @if($subscription->hasPriceIncreaseAtNextRenewal())
+                                        <span class="inline-flex items-center gap-1">
+                                            {{ \Illuminate\Support\Number::currency($subscription->new_price) }}
+                                            <flux:icon.arrow-up variant="micro" />
+                                        </span>
+                                    @else
+                                        {{ $subscription->price ? \Illuminate\Support\Number::currency($subscription->price) : '—' }}
+                                    @endif
                                 </flux:table.cell>
                                 <flux:table.cell>
                                     @if ($subscription->auto_renew)
