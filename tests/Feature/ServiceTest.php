@@ -125,6 +125,27 @@ test('a user can view their own service with its subscription history', function
     $response->assertSeeTextInOrder([$current->start_date->format('M j, Y'), $past->start_date->format('M j, Y')]);
 });
 
+test('a renewed subscription shows a renewed badge instead of expired', function () {
+    $user = User::factory()->create();
+    $service = Service::factory()->for($user)->create();
+    $renewal = Subscription::factory()->for($service)->create([
+        'start_date' => now()->subMonth(),
+        'end_date' => now()->addMonths(11),
+    ]);
+    $renewed = Subscription::factory()->for($service)->create([
+        'start_date' => now()->subMonths(13),
+        'end_date' => now()->subMonth(),
+    ]);
+    $renewed->renewed_subscription_id = $renewal->id;
+    $renewed->save();
+
+    $response = $this->actingAs($user)->get(route('services.show', $service));
+
+    $response->assertOk();
+    $response->assertSeeTextInOrder(['Active', 'Renewed']);
+    $response->assertDontSeeText('Expired');
+});
+
 test('the back link points to the page the user came from', function () {
     $user = User::factory()->create();
     $service = Service::factory()->for($user)->create();

@@ -40,7 +40,9 @@
                                 </flux:table.cell>
                                 <flux:table.cell>{{ $subscription->billing_cycle->label() }}</flux:table.cell>
                                 <flux:table.cell>
-                                    @if (! $subscription->end_date || $subscription->end_date->greaterThanOrEqualTo(today()))
+                                    @if ($subscription->renewed_subscription_id)
+                                        <flux:badge color="zinc" size="sm">{{ __('Renewed') }}</flux:badge>
+                                    @elseif (! $subscription->end_date || $subscription->end_date->greaterThanOrEqualTo(today()))
                                         <flux:badge color="teal" size="sm">{{ __('Active') }}</flux:badge>
                                     @else
                                         <flux:badge color="red" size="sm">{{ __('Expired') }}</flux:badge>
