@@ -57,6 +57,16 @@
                                     @endif
                                 </flux:text>
                             @endif
+
+                            @if ($subscription->new_price !== null && $subscription->new_price_date)
+                                @php($isPriceIncrease = $subscription->new_price > $subscription->price)
+                                <flux:text @class(['inline-flex items-center gap-1 text-sm font-medium', 'text-red-600! dark:text-red-400!' => $isPriceIncrease])>
+                                    {{ __(':price starting :date', ['price' => \Illuminate\Support\Number::currency($subscription->new_price), 'date' => $subscription->new_price_date->format('M j, Y')]) }}
+                                    @if ($isPriceIncrease)
+                                        <flux:icon.arrow-up variant="micro" />
+                                    @endif
+                                </flux:text>
+                            @endif
                         </div>
 
                         <div class="mt-2 flex items-center gap-2">

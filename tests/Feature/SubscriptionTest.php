@@ -82,6 +82,34 @@ test('expired subscriptions are excluded from the subscription list', function (
     $response->assertSee('Ends Today Service');
 });
 
+test('a subscription card shows the new price and its effective date', function () {
+    $user = User::factory()->create();
+    $service = Service::factory()->for($user)->create();
+    Subscription::factory()->for($service)->create([
+        'end_date' => now()->addMonth(),
+        'new_price' => 12.50,
+        'new_price_date' => '2026-01-15',
+    ]);
+
+    $response = $this->actingAs($user)->get(route('subscriptions.index'));
+
+    $response->assertSee('$12.50 starting Jan 15, 2026');
+});
+
+test('a subscription card without a new price shows no price change', function () {
+    $user = User::factory()->create();
+    $service = Service::factory()->for($user)->create();
+    Subscription::factory()->for($service)->create([
+        'end_date' => now()->addMonth(),
+        'new_price' => null,
+        'new_price_date' => null,
+    ]);
+
+    $response = $this->actingAs($user)->get(route('subscriptions.index'));
+
+    $response->assertDontSee('starting');
+});
+
 test('a user can view the create and edit forms', function () {
     $user = User::factory()->create();
     $service = Service::factory()->for($user)->create();
