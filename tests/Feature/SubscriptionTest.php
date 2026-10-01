@@ -164,6 +164,43 @@ test('a user can update their own subscription', function () {
     expect($subscription->auto_renew)->toBeFalse();
 });
 
+test('changing the end date makes a subscription eligible for a new renewal reminder', function () {
+    $user = User::factory()->create();
+    $service = Service::factory()->for($user)->create();
+    $subscription = Subscription::factory()->for($service)->create([
+        'start_date' => '2026-01-01',
+        'end_date' => '2026-02-01',
+        'renewal_notified_at' => '2026-01-29 09:00:00',
+    ]);
+
+    $this->actingAs($user)->put(route('subscriptions.update', $subscription), [
+        'service_id' => $service->id,
+        'start_date' => '2026-01-01',
+        'end_date' => '2026-03-01',
+    ]);
+
+    expect($subscription->refresh()->renewal_notified_at)->toBeNull();
+});
+
+test('updating a subscription without changing the end date keeps its renewal reminder marked as sent', function () {
+    $user = User::factory()->create();
+    $service = Service::factory()->for($user)->create();
+    $subscription = Subscription::factory()->for($service)->create([
+        'start_date' => '2026-01-01',
+        'end_date' => '2026-02-01',
+        'renewal_notified_at' => '2026-01-29 09:00:00',
+    ]);
+
+    $this->actingAs($user)->put(route('subscriptions.update', $subscription), [
+        'service_id' => $service->id,
+        'start_date' => '2026-01-01',
+        'end_date' => '2026-02-01',
+        'note' => 'updated',
+    ]);
+
+    expect($subscription->refresh()->renewal_notified_at->toDateTimeString())->toBe('2026-01-29 09:00:00');
+});
+
 test('a user can create a subscription with a new price and effective date', function () {
     $user = User::factory()->create();
     $service = Service::factory()->for($user)->create();

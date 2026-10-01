@@ -19,6 +19,8 @@ class Profile extends Component
 
     public string $email = '';
 
+    public ?int $renewal_notification_days = null;
+
     /**
      * Mount the component.
      */
@@ -26,6 +28,7 @@ class Profile extends Component
     {
         $this->name = Auth::user()->name;
         $this->email = Auth::user()->email;
+        $this->renewal_notification_days = Auth::user()->renewal_notification_days;
     }
 
     /**
@@ -35,7 +38,10 @@ class Profile extends Component
     {
         $user = Auth::user();
 
-        $validated = $this->validate($this->profileRules($user->id));
+        $validated = $this->validate([
+            ...$this->profileRules($user->id),
+            'renewal_notification_days' => $this->renewalNotificationDaysRules(),
+        ]);
 
         $user->fill($validated);
 

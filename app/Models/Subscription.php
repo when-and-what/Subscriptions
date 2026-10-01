@@ -37,6 +37,7 @@ class Subscription extends Model
         'price' => Currency::class,
         'new_price' => Currency::class,
         'new_price_date' => 'date',
+        'renewal_notified_at' => 'datetime',
     ];
 
     /** @return BelongsTo<Service, $this> */

@@ -44,6 +44,52 @@ test('email verification status is unchanged when email address is unchanged', f
     expect($user->refresh()->email_verified_at)->not->toBeNull();
 });
 
+test('renewal reminder days can be saved', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    $response = Livewire::test(Profile::class)
+        ->set('renewal_notification_days', 7)
+        ->call('updateProfileInformation');
+
+    $response->assertHasNoErrors();
+
+    expect($user->refresh()->renewal_notification_days)->toBe(7);
+});
+
+test('renewal reminders are turned off when the days field is cleared', function () {
+    $user = User::factory()->withRenewalNotifications(7)->create();
+
+    $this->actingAs($user);
+
+    $response = Livewire::test(Profile::class)
+        ->assertSet('renewal_notification_days', 7)
+        ->set('renewal_notification_days', '')
+        ->call('updateProfileInformation');
+
+    $response->assertHasNoErrors();
+
+    expect($user->refresh()->renewal_notification_days)->toBeNull();
+});
+
+test('renewal reminder days outside the allowed range are rejected', function (int $days) {
+    $user = User::factory()->withRenewalNotifications(7)->create();
+
+    $this->actingAs($user);
+
+    $response = Livewire::test(Profile::class)
+        ->set('renewal_notification_days', $days)
+        ->call('updateProfileInformation');
+
+    $response->assertHasErrors(['renewal_notification_days']);
+
+    expect($user->refresh()->renewal_notification_days)->toBe(7);
+})->with([
+    'below the minimum' => 0,
+    'above the maximum' => 91,
+]);
+
 test('user can delete their account', function () {
     $user = User::factory()->create();
 

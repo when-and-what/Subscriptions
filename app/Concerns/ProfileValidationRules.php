@@ -32,6 +32,16 @@ trait ProfileValidationRules
     }
 
     /**
+     * Get the validation rules used to validate the renewal notification lead time.
+     *
+     * @return array<int, ValidationRule|array<mixed>|string>
+     */
+    protected function renewalNotificationDaysRules(): array
+    {
+        return ['nullable', 'integer', 'min:1', 'max:30'];
+    }
+
+    /**
      * Get the validation rules used to validate user emails.
      *
      * @return array<int, ValidationRule|array<mixed>|string>

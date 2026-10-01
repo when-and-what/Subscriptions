@@ -114,3 +114,18 @@ test('a renewal keeps the current price and carries the pending new price forwar
     expect($renewal->new_price)->toBe(12.50);
     expect($renewal->new_price_date->toDateString())->toBe($newPriceDate->toDateString());
 });
+
+test('a renewal starts without a renewal reminder marked as sent', function () {
+    $subscription = Subscription::factory()->create([
+        'end_date' => now()->toDateString(),
+        'auto_renew' => true,
+        'renewal_notified_at' => now()->subDays(3),
+    ]);
+
+    $this->artisan('app:renew-subscription');
+
+    $renewal = Subscription::where('id', '!=', $subscription->id)->first();
+
+    expect($renewal)->not->toBeNull();
+    expect($renewal->renewal_notified_at)->toBeNull();
+});

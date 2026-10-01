@@ -68,7 +68,13 @@ class SubscriptionController extends Controller
     {
         Gate::authorize('update', $subscription);
 
-        $subscription->update($request->validated());
+        $subscription->fill($request->validated());
+
+        if ($subscription->isDirty('end_date')) {
+            $subscription->renewal_notified_at = null;
+        }
+
+        $subscription->save();
 
         return redirect()->route('subscriptions.index')->with('success', 'Subscription updated.');
     }
