@@ -120,6 +120,7 @@ test('an omitted auto_renew value defaults to false instead of erroring', functi
     $response = $this->actingAs($user)->post(route('subscriptions.store'), [
         'service_id' => $service->id,
         'start_date' => now()->toDateString(),
+        'end_date' => now()->addMonth()->toDateString(),
         'billing_cycle' => 1,
     ]);
 
@@ -136,6 +137,7 @@ test('a checked switch\'s "1" value is accepted as auto_renew=true', function ()
     $response = $this->actingAs($user)->post(route('subscriptions.store'), [
         'service_id' => $service->id,
         'start_date' => now()->toDateString(),
+        'end_date' => now()->addMonth()->toDateString(),
         'billing_cycle' => 1,
         'auto_renew' => '1',
     ]);
@@ -152,6 +154,7 @@ test('a user can update their own subscription', function () {
     $response = $this->actingAs($user)->put(route('subscriptions.update', $subscription), [
         'service_id' => $service->id,
         'start_date' => $subscription->start_date->toDateString(),
+        'end_date' => $subscription->start_date->addYear()->toDateString(),
         'billing_cycle' => 12,
         'auto_renew' => '0',
     ]);
@@ -190,6 +193,8 @@ test('a user can update the new price and effective date of their own subscripti
 
     $response = $this->actingAs($user)->put(route('subscriptions.update', $subscription), [
         'service_id' => $service->id,
+        'start_date' => '2026-01-01',
+        'end_date' => '2026-02-01',
         'new_price' => '12.50',
         'new_price_date' => '2026-01-15',
     ]);
@@ -209,6 +214,8 @@ test('a user can clear the new price and effective date of their own subscriptio
 
     $response = $this->actingAs($user)->put(route('subscriptions.update', $subscription), [
         'service_id' => $service->id,
+        'start_date' => '2026-01-01',
+        'end_date' => '2026-02-01',
         'new_price' => '',
         'new_price_date' => '',
     ]);
