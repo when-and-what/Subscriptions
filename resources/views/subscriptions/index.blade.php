@@ -58,7 +58,7 @@
                                 </flux:text>
                             @endif
 
-                            @if ($subscription->new_price !== null && $subscription->new_price_date)
+                            @if ($subscription->hasPriceIncreaseAtNextRenewal())
                                 @php($isPriceIncrease = $subscription->new_price > $subscription->price)
                                 <flux:text @class(['inline-flex items-center gap-1 text-sm font-medium', 'text-red-600! dark:text-red-400!' => $isPriceIncrease])>
                                     {{ __(':price starting :date', ['price' => \Illuminate\Support\Number::currency($subscription->new_price), 'date' => $subscription->new_price_date->format('M j, Y')]) }}
