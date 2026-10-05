@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Database\Factories\ServiceFactory;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -53,5 +55,19 @@ class Service extends Model
             get: fn (): bool => $this->subscription !== null
                 && $this->subscription->end_date->greaterThanOrEqualTo(today()),
         );
+    }
+
+    /** @param  Builder<Service>  $query */
+    #[Scope]
+    protected function active(Builder $query): void
+    {
+        $query->whereHas('subscription', fn (Builder $query) => $query->whereDate('end_date', '>=', today()));
+    }
+
+    /** @param  Builder<Service>  $query */
+    #[Scope]
+    protected function expired(Builder $query): void
+    {
+        $query->whereHas('subscription', fn (Builder $query) => $query->whereDate('end_date', '<', today()));
     }
 }

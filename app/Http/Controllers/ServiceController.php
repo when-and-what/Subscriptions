@@ -16,9 +16,12 @@ class ServiceController extends Controller
     public function index(): View
     {
         $categoryId = request()->integer('category') ?: null;
+        $status = in_array(request('status'), ['active', 'expired', 'all'], true) ? request('status') : 'active';
 
         $services = Service::whereBelongsTo(auth()->user())
             ->with(['subscription', 'categories'])
+            ->when($status === 'active', fn ($query) => $query->active())
+            ->when($status === 'expired', fn ($query) => $query->expired())
             ->when($categoryId, fn ($query) => $query->whereRelation('categories', 'categories.id', $categoryId))
             ->orderBy('name')
             ->paginate(18)
@@ -26,6 +29,8 @@ class ServiceController extends Controller
 
         return view('services.index', [
             'services' => $services,
+            'status' => $status,
+            'hasAnyServices' => $services->isNotEmpty() || auth()->user()->services()->exists(),
             'categories' => auth()->user()->categories()->orderBy('name')->get(),
         ]);
     }

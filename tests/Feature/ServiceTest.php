@@ -18,7 +18,7 @@ test('a user can list their own services', function () {
     $service = Service::factory()->for($user)->create();
     Service::factory()->create(); // another user's service
 
-    $response = $this->actingAs($user)->get(route('services.index'));
+    $response = $this->actingAs($user)->get(route('services.index', ['status' => 'all']));
 
     $response->assertOk();
     $response->assertSee($service->name);
@@ -30,7 +30,7 @@ test('a service card shows its category badges', function () {
     $category = Category::factory()->for($user)->create(['name' => 'Streaming']);
     $service->categories()->attach($category);
 
-    $response = $this->actingAs($user)->get(route('services.index'));
+    $response = $this->actingAs($user)->get(route('services.index', ['status' => 'all']));
 
     $response->assertOk();
     $response->assertSee('Streaming');
@@ -45,7 +45,7 @@ test('filtering services by category only shows matching services', function () 
     $netflix->categories()->attach($streaming);
     $github->categories()->attach($software);
 
-    $response = $this->actingAs($user)->get(route('services.index', ['category' => $streaming->id]));
+    $response = $this->actingAs($user)->get(route('services.index', ['status' => 'all', 'category' => $streaming->id]));
 
     $response->assertOk();
     $response->assertSee('Netflix');
@@ -57,7 +57,7 @@ test('filtering services by another user\'s category returns no results', functi
     Service::factory()->for($user)->create(['name' => 'Paramount Plus']);
     $otherCategory = Category::factory()->create();
 
-    $response = $this->actingAs($user)->get(route('services.index', ['category' => $otherCategory->id]));
+    $response = $this->actingAs($user)->get(route('services.index', ['status' => 'all', 'category' => $otherCategory->id]));
 
     $response->assertOk();
     $response->assertDontSee('Paramount Plus');
@@ -67,10 +67,10 @@ test('service pagination links point to the next page', function () {
     $user = User::factory()->create();
     Service::factory()->for($user)->count(20)->create();
 
-    $response = $this->actingAs($user)->get(route('services.index'));
+    $response = $this->actingAs($user)->get(route('services.index', ['status' => 'all']));
 
     $response->assertOk();
-    $response->assertSee(route('services.index').'?page=2', false);
+    $response->assertSee(route('services.index').'?status=all&amp;page=2', false);
 });
 
 test('a service with an active subscription shows its end date badge', function () {
@@ -82,29 +82,115 @@ test('a service with an active subscription shows its end date badge', function 
 
     $response->assertOk();
     $response->assertSeeText($subscription->end_date->format('M jS'));
-    $response->assertDontSeeText('Expired');
+    $response->assertDontSeeText('Expired ·');
 });
 
 test('a service with an expired subscription shows an expired badge', function () {
     $user = User::factory()->create();
     $service = Service::factory()->for($user)->create();
-    Subscription::factory()->for($service)->create(['end_date' => now()->subMonth()]);
+    $subscription = Subscription::factory()->for($service)->create(['end_date' => now()->subMonth()]);
 
-    $response = $this->actingAs($user)->get(route('services.index'));
+    $response = $this->actingAs($user)->get(route('services.index', ['status' => 'expired']));
 
     $response->assertOk();
-    $response->assertSeeText('Expired');
-    $response->assertDontSeeText('Active');
+    $response->assertSeeText('Expired · '.$subscription->end_date->format('M jS'));
 });
 
 test('a service without a subscription shows a no subscription badge', function () {
     $user = User::factory()->create();
     Service::factory()->for($user)->create();
 
-    $response = $this->actingAs($user)->get(route('services.index'));
+    $response = $this->actingAs($user)->get(route('services.index', ['status' => 'all']));
 
     $response->assertOk();
     $response->assertSeeText('No subscription');
+});
+
+test('the services index shows only active services by default', function () {
+    $user = User::factory()->create();
+    Subscription::factory()->for(Service::factory()->for($user)->create(['name' => 'Netflix']))->create(['end_date' => today()]);
+    Subscription::factory()->for(Service::factory()->for($user)->create(['name' => 'Hulu']))->create(['end_date' => today()->subDay()]);
+    Service::factory()->for($user)->create(['name' => 'Spotify']);
+
+    $response = $this->actingAs($user)->get(route('services.index'));
+
+    $response->assertOk();
+    $response->assertSee('Netflix');
+    $response->assertDontSee('Hulu');
+    $response->assertDontSee('Spotify');
+});
+
+test('filtering services by expired status only shows expired services', function () {
+    $user = User::factory()->create();
+    Subscription::factory()->for(Service::factory()->for($user)->create(['name' => 'Netflix']))->create(['end_date' => today()]);
+    Subscription::factory()->for(Service::factory()->for($user)->create(['name' => 'Hulu']))->create(['end_date' => today()->subDay()]);
+    Service::factory()->for($user)->create(['name' => 'Spotify']);
+
+    $response = $this->actingAs($user)->get(route('services.index', ['status' => 'expired']));
+
+    $response->assertOk();
+    $response->assertSee('Hulu');
+    $response->assertDontSee('Netflix');
+    $response->assertDontSee('Spotify');
+});
+
+test('a service renewed after expiring is not listed as expired', function () {
+    $user = User::factory()->create();
+    $service = Service::factory()->for($user)->create(['name' => 'Netflix']);
+    Subscription::factory()->for($service)->create(['end_date' => today()->subMonth()]);
+    Subscription::factory()->for($service)->create(['end_date' => today()->addMonth()]);
+
+    $response = $this->actingAs($user)->get(route('services.index', ['status' => 'expired']));
+
+    $response->assertOk();
+    $response->assertDontSee('Netflix');
+});
+
+test('filtering services by all status shows every service', function () {
+    $user = User::factory()->create();
+    Subscription::factory()->for(Service::factory()->for($user)->create(['name' => 'Netflix']))->create(['end_date' => today()]);
+    Subscription::factory()->for(Service::factory()->for($user)->create(['name' => 'Hulu']))->create(['end_date' => today()->subDay()]);
+    Service::factory()->for($user)->create(['name' => 'Spotify']);
+
+    $response = $this->actingAs($user)->get(route('services.index', ['status' => 'all']));
+
+    $response->assertOk();
+    $response->assertSee('Netflix');
+    $response->assertSee('Hulu');
+    $response->assertSee('Spotify');
+});
+
+test('status and category filters combine', function () {
+    $user = User::factory()->create();
+    $streaming = Category::factory()->for($user)->create(['name' => 'Streaming']);
+    $hulu = Service::factory()->for($user)->create(['name' => 'Hulu']);
+    $netflix = Service::factory()->for($user)->create(['name' => 'Netflix']);
+    $github = Service::factory()->for($user)->create(['name' => 'GitHub']);
+    $hulu->categories()->attach($streaming);
+    $netflix->categories()->attach($streaming);
+    Subscription::factory()->for($hulu)->create(['end_date' => today()->subDay()]);
+    Subscription::factory()->for($netflix)->create(['end_date' => today()->addMonth()]);
+    Subscription::factory()->for($github)->create(['end_date' => today()->subDay()]);
+
+    $response = $this->actingAs($user)->get(route('services.index', ['status' => 'expired', 'category' => $streaming->id]));
+
+    $response->assertOk();
+    $response->assertSee('Hulu');
+    $response->assertDontSee('Netflix');
+    $response->assertDontSee('GitHub');
+    $response->assertSee(route('services.index', ['status' => 'expired']), false);
+    $response->assertSee(route('services.index', ['category' => $streaming->id]), false);
+});
+
+test('a user with only expired services sees a no matches message by default', function () {
+    $user = User::factory()->create();
+    Subscription::factory()->for(Service::factory()->for($user)->create())->create(['end_date' => today()->subDay()]);
+
+    $response = $this->actingAs($user)->get(route('services.index'));
+
+    $response->assertOk();
+    $response->assertSeeText('No services match these filters.');
+    $response->assertDontSeeText('No services yet');
 });
 
 test('a user can view their own service with its subscription history', function () {
