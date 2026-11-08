@@ -28,11 +28,12 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
  * @property string|null $remember_token
+ * @property string|null $calendar_feed_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
 #[Fillable(['name', 'email', 'password', 'renewal_notification_days'])]
-#[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
+#[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token', 'calendar_feed_token'])]
 class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
@@ -80,5 +81,27 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         return Str::length($initials) > 1
             ? Str::substr($initials, 0, 1).Str::substr($initials, -1)
             : $initials;
+    }
+
+    /**
+     * Get the user's calendar feed token, generating one if it doesn't exist yet.
+     */
+    public function calendarFeedToken(): string
+    {
+        if ($this->calendar_feed_token === null) {
+            $this->rotateCalendarFeedToken();
+        }
+
+        return $this->calendar_feed_token;
+    }
+
+    /**
+     * Rotate the user's calendar feed token, invalidating any previously issued feed URL.
+     */
+    public function rotateCalendarFeedToken(): string
+    {
+        $this->forceFill(['calendar_feed_token' => Str::random(40)])->save();
+
+        return $this->calendar_feed_token;
     }
 }

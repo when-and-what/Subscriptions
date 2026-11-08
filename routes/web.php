@@ -1,10 +1,16 @@
 <?php
 
+use App\Http\Controllers\CalendarFeedController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('calendar/{token}.ics', CalendarFeedController::class)
+    ->where('token', '[a-zA-Z0-9]+')
+    ->middleware('throttle:calendar-feed')
+    ->name('calendar.feed');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/', DashboardController::class)->name('home');
