@@ -116,12 +116,24 @@ test('feed description omits the new price when it takes effect after the next r
     $response->assertDontSee('New price', escape: false);
 });
 
-test('feed requests are rate limited', function () {
+test('feed requests are rate limited per token', function () {
     $token = User::factory()->create()->calendarFeedToken();
 
-    for ($attempt = 0; $attempt < 60; $attempt++) {
+    for ($attempt = 0; $attempt < 10; $attempt++) {
         $this->get(route('calendar.feed', ['token' => $token]))->assertOk();
     }
 
     $this->get(route('calendar.feed', ['token' => $token]))->assertTooManyRequests();
+});
+
+test('rate limiting one feed does not block other feeds from the same ip', function () {
+    $throttledToken = User::factory()->create()->calendarFeedToken();
+    $otherToken = User::factory()->create()->calendarFeedToken();
+
+    for ($attempt = 0; $attempt < 11; $attempt++) {
+        $this->get(route('calendar.feed', ['token' => $throttledToken]));
+    }
+
+    $this->get(route('calendar.feed', ['token' => $throttledToken]))->assertTooManyRequests();
+    $this->get(route('calendar.feed', ['token' => $otherToken]))->assertOk();
 });

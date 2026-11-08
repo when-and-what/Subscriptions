@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('calendar/{token}.ics', CalendarFeedController::class)
     ->where('token', '[a-zA-Z0-9]+')
-    ->middleware('throttle:60,1')
+    ->middleware('throttle:calendar-feed')
     ->name('calendar.feed');
 
 Route::middleware(['auth', 'verified'])->group(function () {
