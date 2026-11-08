@@ -1,22 +1,24 @@
 <?php
 
 use App\Http\Controllers\CalendarFeedController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome')->name('home');
-
 Route::get('calendar/{token}.ics', CalendarFeedController::class)
     ->where('token', '[a-zA-Z0-9]+')
+    ->middleware('throttle:60,1')
     ->name('calendar.feed');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/', DashboardController::class)->name('home');
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     Route::resource('services', ServiceController::class);
     Route::resource('subscriptions', SubscriptionController::class)->except(['show']);
+    Route::resource('categories', CategoryController::class)->except('show');
 });
 
 require __DIR__.'/settings.php';

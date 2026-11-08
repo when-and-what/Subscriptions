@@ -19,11 +19,14 @@ test('invalid token returns 404', function () {
     $this->get('/calendar/not-a-real-token.ics')->assertNotFound();
 });
 
-test('feed includes subscriptions with an end date and excludes subscriptions without one', function () {
+test('feed excludes subscriptions that ended more than a year ago', function () {
     $user = User::factory()->create();
     $service = Service::factory()->for($user)->create();
     Subscription::factory()->for($service)->create(['end_date' => now()->addMonth()]);
-    Subscription::factory()->for($service)->create(['end_date' => null]);
+    Subscription::factory()->for($service)->create([
+        'start_date' => now()->subYears(3),
+        'end_date' => now()->subYears(2),
+    ]);
 
     $response = $this->get(route('calendar.feed', ['token' => $user->calendarFeedToken()]));
 
@@ -81,4 +84,44 @@ test('feed excludes soft-deleted subscriptions', function () {
     $response = $this->get(route('calendar.feed', ['token' => $user->calendarFeedToken()]));
 
     $response->assertDontSee('unique-deleted-note', escape: false);
+});
+
+test('feed description includes the new price when it takes effect at the next renewal', function () {
+    $user = User::factory()->create();
+    $service = Service::factory()->for($user)->create();
+    Subscription::factory()->for($service)->create([
+        'end_date' => now()->addMonth(),
+        'price' => 10,
+        'new_price' => 12.5,
+        'new_price_date' => now()->addWeek(),
+    ]);
+
+    $response = $this->get(route('calendar.feed', ['token' => $user->calendarFeedToken()]));
+
+    $response->assertSee('New price: $12.50', escape: false);
+});
+
+test('feed description omits the new price when it takes effect after the next renewal', function () {
+    $user = User::factory()->create();
+    $service = Service::factory()->for($user)->create();
+    Subscription::factory()->for($service)->create([
+        'end_date' => now()->addMonth(),
+        'price' => 10,
+        'new_price' => 12.5,
+        'new_price_date' => now()->addMonths(2),
+    ]);
+
+    $response = $this->get(route('calendar.feed', ['token' => $user->calendarFeedToken()]));
+
+    $response->assertDontSee('New price', escape: false);
+});
+
+test('feed requests are rate limited', function () {
+    $token = User::factory()->create()->calendarFeedToken();
+
+    for ($attempt = 0; $attempt < 60; $attempt++) {
+        $this->get(route('calendar.feed', ['token' => $token]))->assertOk();
+    }
+
+    $this->get(route('calendar.feed', ['token' => $token]))->assertTooManyRequests();
 });

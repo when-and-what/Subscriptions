@@ -6,7 +6,21 @@
             </flux:button>
         </x-page-header>
 
-        @if ($services->isEmpty())
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-6">
+            <div class="shrink-0 lg:order-last lg:ml-auto">
+                <x-status-filter :status="$status" route="services.index" />
+            </div>
+
+            @if ($categories->isNotEmpty())
+                <div class="min-w-0 flex-1">
+                    <x-category-filter :categories="$categories" route="services.index" />
+                </div>
+            @endif
+        </div>
+
+        @if ($services->isEmpty() && $hasAnyServices)
+            <flux:text>{{ __('No services match these filters.') }}</flux:text>
+        @elseif ($services->isEmpty())
             <flux:callout icon="building-storefront" :heading="__('No services yet')" :text="__('Add the subscription providers you want to track, like Netflix or Spotify.')">
                 <x-slot name="actions">
                     <flux:button :href="route('services.create')" wire:navigate>{{ __('New Service') }}</flux:button>
@@ -27,7 +41,7 @@
                                     <flux:badge color="zinc" size="sm">{{ __('No subscription') }}</flux:badge>
                                 @elseif ($service->is_active)
                                     <flux:badge color="teal" size="sm">
-                                        {{ $service->subscription->end_date ? __('Active · :date', ['date' => $service->subscription->end_date->format('M jS')]) : __('Active') }}
+                                        {{ $service->subscription->end_date->format('M jS') }}
                                     </flux:badge>
                                 @else
                                     <flux:badge color="red" size="sm">
@@ -37,8 +51,12 @@
                             </div>
                         </div>
 
-                        @if ($service->url)
-                            <flux:text class="truncate">{{ $service->url }}</flux:text>
+                        @if ($service->categories->isNotEmpty())
+                            <div class="flex flex-wrap gap-1">
+                                @foreach ($service->categories as $category)
+                                    <flux:badge size="sm" color="zinc">{{ $category->name }}</flux:badge>
+                                @endforeach
+                            </div>
                         @endif
 
                         <div class="mt-2 flex items-center gap-2">
@@ -50,7 +68,7 @@
                 @endforeach
             </div>
 
-            <flux:pagination :paginator="$services" />
+            {{ $services->links('pagination.flux') }}
         @endif
     </div>
 </x-layouts::app>

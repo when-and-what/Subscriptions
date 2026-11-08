@@ -19,7 +19,7 @@ class CalendarFeedController extends Controller
 
         $subscriptions = Subscription::query()
             ->whereRelation('service', 'user_id', $user->id)
-            ->whereNotNull('end_date')
+            ->whereDate('end_date', '>=', today()->subYear())
             ->with('service')
             ->orderBy('end_date')
             ->get();
@@ -46,6 +46,7 @@ class CalendarFeedController extends Controller
 
         $descriptionLines = array_filter([
             $subscription->price !== null ? 'Price: $'.number_format($subscription->price, 2) : null,
+            $subscription->hasPriceIncreaseAtNextRenewal() ? 'New price: $'.number_format($subscription->new_price, 2) : null,
             'Billing cycle: '.$subscription->billing_cycle->label(),
             $subscription->note,
         ]);

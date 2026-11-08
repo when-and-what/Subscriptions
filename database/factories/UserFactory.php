@@ -47,6 +47,16 @@ class UserFactory extends Factory
     }
 
     /**
+     * Indicate that the model receives renewal reminders the given number of days ahead.
+     */
+    public function withRenewalNotifications(int $days = 3): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'renewal_notification_days' => $days,
+        ]);
+    }
+
+    /**
      * Indicate that the model has two-factor authentication configured.
      */
     public function withTwoFactor(): static

@@ -15,13 +15,21 @@ class SubscriptionController extends Controller
      */
     public function index(): View
     {
+        $categoryId = request()->integer('category') ?: null;
+
         $subscriptions = Subscription::query()
             ->whereRelation('service', 'user_id', auth()->id())
-            ->with('service')
+            ->WhereDate('end_date', '>=', today())
+            ->with('service.categories')
+            ->when($categoryId, fn ($query) => $query->whereRelation('service.categories', 'categories.id', $categoryId))
             ->orderBy('end_date')
-            ->paginate(9);
+            ->paginate(12)
+            ->withQueryString();
 
-        return view('subscriptions.index', ['subscriptions' => $subscriptions]);
+        return view('subscriptions.index', [
+            'subscriptions' => $subscriptions,
+            'categories' => auth()->user()->categories()->orderBy('name')->get(),
+        ]);
     }
 
     /**
@@ -61,7 +69,13 @@ class SubscriptionController extends Controller
     {
         Gate::authorize('update', $subscription);
 
-        $subscription->update($request->validated());
+        $subscription->fill($request->validated());
+
+        if ($subscription->isDirty('end_date')) {
+            $subscription->renewal_notified_at = null;
+        }
+
+        $subscription->save();
 
         return redirect()->route('subscriptions.index')->with('success', 'Subscription updated.');
     }

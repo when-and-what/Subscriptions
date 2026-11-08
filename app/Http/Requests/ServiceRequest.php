@@ -4,6 +4,8 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class ServiceRequest extends FormRequest
 {
@@ -25,6 +27,11 @@ class ServiceRequest extends FormRequest
         return [
             'name' => 'required',
             'url' => 'nullable|url',
+            'categories' => 'nullable|array',
+            'categories.*' => [
+                'integer',
+                Rule::exists('categories', 'id')->where('user_id', Auth::id()),
+            ],
         ];
     }
 }

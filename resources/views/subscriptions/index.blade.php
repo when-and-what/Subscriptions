@@ -6,6 +6,10 @@
             </flux:button>
         </x-page-header>
 
+        @if ($categories->isNotEmpty())
+            <x-category-filter :categories="$categories" route="subscriptions.index" />
+        @endif
+
         @if ($subscriptions->isEmpty())
             <flux:callout icon="credit-card" :heading="__('No subscriptions yet')" :text="__('Track a subscription against one of your services to see it here.')">
                 <x-slot name="actions">
@@ -16,12 +20,24 @@
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 @foreach ($subscriptions as $subscription)
                     <flux:card class="flex flex-col gap-3">
-                        <div class="flex items-start justify-between gap-2">
-                            <flux:heading size="lg">{{ $subscription->service->name }}</flux:heading>
+                        <div class="relative flex items-start justify-between gap-2">
+                            <flux:heading size="lg">
+                                <a href="{{ route('services.show', $subscription->service) }}" wire:navigate class="after:absolute after:inset-0 after:content-['']">
+                                    {{ $subscription->service->name }}
+                                </a>
+                            </flux:heading>
                             @if ($subscription->auto_renew)
                                 <flux:badge color="teal" size="sm">{{ __('Auto-renews') }}</flux:badge>
                             @endif
                         </div>
+
+                        @if ($subscription->service->categories->isNotEmpty())
+                            <div class="flex flex-wrap gap-1">
+                                @foreach ($subscription->service->categories as $category)
+                                    <flux:badge size="sm" color="zinc">{{ $category->name }}</flux:badge>
+                                @endforeach
+                            </div>
+                        @endif
 
                         <div class="flex flex-col gap-1">
                             <flux:text>
@@ -41,6 +57,16 @@
                                     @endif
                                 </flux:text>
                             @endif
+
+                            @if ($subscription->hasPriceIncreaseAtNextRenewal())
+                                @php($isPriceIncrease = $subscription->new_price > $subscription->price)
+                                <flux:text @class(['inline-flex items-center gap-1 text-sm font-medium', 'text-red-600! dark:text-red-400!' => $isPriceIncrease])>
+                                    {{ __(':price starting :date', ['price' => \Illuminate\Support\Number::currency($subscription->new_price), 'date' => $subscription->new_price_date->format('M j, Y')]) }}
+                                    @if ($isPriceIncrease)
+                                        <flux:icon.arrow-up variant="micro" />
+                                    @endif
+                                </flux:text>
+                            @endif
                         </div>
 
                         <div class="mt-2 flex items-center gap-2">
@@ -52,7 +78,7 @@
                 @endforeach
             </div>
 
-            <flux:pagination :paginator="$subscriptions" />
+            {{ $subscriptions->links('pagination.flux') }}
         @endif
     </div>
 </x-layouts::app>

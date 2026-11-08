@@ -24,7 +24,7 @@ class SubscriptionFactory extends Factory
         return [
             'service_id' => Service::factory(),
             'start_date' => $startDate,
-            'end_date' => fake()->boolean(70) ? fake()->dateTimeBetween($startDate, '+1 year') : null,
+            'end_date' => fake()->dateTimeBetween($startDate, '+1 year'),
             'price' => fake()->randomFloat(2, 3, 60),
             'billing_cycle' => fake()->randomElement(BillingCycle::cases())->value,
             'auto_renew' => fake()->boolean(),

@@ -1,7 +1,7 @@
 <x-layouts::app :title="$service->name">
     <div class="flex flex-col gap-6">
-        <flux:button variant="ghost" size="sm" icon="arrow-left" :href="route('services.index')" wire:navigate class="self-start">
-            {{ __('Back to Services') }}
+        <flux:button variant="ghost" size="sm" icon="arrow-left" :href="$backUrl" wire:navigate class="self-start">
+            {{ __($backLabel) }}
         </flux:button>
 
         <x-page-header :title="$service->name" :subtitle="$service->url">
@@ -34,13 +34,15 @@
                         @foreach ($service->subscriptions as $subscription)
                             <flux:table.row>
                                 <flux:table.cell>{{ $subscription->start_date->format('M j, Y') }}</flux:table.cell>
-                                <flux:table.cell>{{ $subscription->end_date?->format('M j, Y') ?? '—' }}</flux:table.cell>
+                                <flux:table.cell>{{ $subscription->end_date->format('M j, Y') }}</flux:table.cell>
                                 <flux:table.cell>
                                     {{ $subscription->price ? \Illuminate\Support\Number::currency($subscription->price) : '—' }}
                                 </flux:table.cell>
                                 <flux:table.cell>{{ $subscription->billing_cycle->label() }}</flux:table.cell>
                                 <flux:table.cell>
-                                    @if (! $subscription->end_date || $subscription->end_date->greaterThanOrEqualTo(today()))
+                                    @if ($subscription->renewed_subscription_id)
+                                        <flux:badge color="zinc" size="sm">{{ __('Renewed') }}</flux:badge>
+                                    @elseif ($subscription->end_date->greaterThanOrEqualTo(today()))
                                         <flux:badge color="teal" size="sm">{{ __('Active') }}</flux:badge>
                                     @else
                                         <flux:badge color="red" size="sm">{{ __('Expired') }}</flux:badge>

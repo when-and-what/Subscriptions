@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use Database\Factories\ServiceFactory;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -39,12 +42,32 @@ class Service extends Model
         return $this->hasOne(Subscription::class)->ofMany('end_date', 'MAX');
     }
 
+    /** @return BelongsToMany<Category, $this> */
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class);
+    }
+
     /** @return Attribute<bool, never> */
     protected function isActive(): Attribute
     {
         return Attribute::make(
             get: fn (): bool => $this->subscription !== null
-                && (! $this->subscription->end_date || $this->subscription->end_date->greaterThanOrEqualTo(today())),
+                && $this->subscription->end_date->greaterThanOrEqualTo(today()),
         );
+    }
+
+    /** @param  Builder<Service>  $query */
+    #[Scope]
+    protected function active(Builder $query): void
+    {
+        $query->whereHas('subscription', fn (Builder $query) => $query->whereDate('end_date', '>=', today()));
+    }
+
+    /** @param  Builder<Service>  $query */
+    #[Scope]
+    protected function expired(Builder $query): void
+    {
+        $query->whereHas('subscription', fn (Builder $query) => $query->whereDate('end_date', '<', today()));
     }
 }

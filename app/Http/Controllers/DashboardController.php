@@ -12,10 +12,10 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        $thisMonth = Subscription::query()
+        $thisWeek = Subscription::query()
             ->whereRelation('service', 'user_id', $user->id)
             ->where('end_date', '>=', now())
-            ->where('end_date', '<=', now()->endOfMonth())
+            ->where('end_date', '<=', now()->addWeek())
             ->count();
 
         $activeSubscriptions = Subscription::query()
@@ -34,13 +34,13 @@ class DashboardController extends Controller
         $upcomingRenewals = Subscription::query()
             ->whereRelation('service', 'user_id', $user->id)
             ->where('end_date', '>=', now())
-            ->where('end_date', '<=', now()->plus(months: 1))
+            ->where('end_date', '<=', now()->plus(days: 10))
             ->with('service')
             ->orderBy('end_date', 'asc')
             ->get();
 
         return view('dashboard', [
-            'thisMonth' => $thisMonth,
+            'thisWeek' => $thisWeek,
             'activeSubscriptionCount' => $activeSubscriptionCount,
             'monthlyTotal' => $monthlyTotal,
             'upcomingRenewals' => $upcomingRenewals,

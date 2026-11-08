@@ -15,13 +15,23 @@ class ServiceController extends Controller
      */
     public function index(): View
     {
+        $categoryId = request()->integer('category') ?: null;
+        $status = in_array(request('status'), ['active', 'expired', 'all'], true) ? request('status') : 'active';
+
         $services = Service::whereBelongsTo(auth()->user())
-            ->with('subscription')
+            ->with(['subscription', 'categories'])
+            ->when($status === 'active', fn ($query) => $query->active())
+            ->when($status === 'expired', fn ($query) => $query->expired())
+            ->when($categoryId, fn ($query) => $query->whereRelation('categories', 'categories.id', $categoryId))
             ->orderBy('name')
-            ->paginate(12);
+            ->paginate(18)
+            ->withQueryString();
 
         return view('services.index', [
             'services' => $services,
+            'status' => $status,
+            'hasAnyServices' => $services->isNotEmpty() || auth()->user()->services()->exists(),
+            'categories' => auth()->user()->categories()->orderBy('name')->get(),
         ]);
     }
 
@@ -38,7 +48,9 @@ class ServiceController extends Controller
      */
     public function store(ServiceRequest $request): RedirectResponse
     {
-        auth()->user()->services()->create($request->validated());
+        $service = auth()->user()->services()->create($request->safe()->except('categories'));
+
+        $service->categories()->sync($request->validated('categories', []));
 
         return redirect()->route('services.index')->with('success', 'Service created.');
     }
@@ -52,8 +64,13 @@ class ServiceController extends Controller
 
         $service->load(['subscriptions' => fn ($query) => $query->orderByDesc('start_date')]);
 
+        $previousUrl = session()->previousUrl();
+        $hasPreviousUrl = $previousUrl && $previousUrl !== url()->current();
+
         return view('services.show', [
             'service' => $service,
+            'backUrl' => $hasPreviousUrl ? $previousUrl : route('services.index'),
+            'backLabel' => $hasPreviousUrl ? 'Back' : 'Back to Services',
         ]);
     }
 
@@ -63,6 +80,8 @@ class ServiceController extends Controller
     public function edit(Service $service): View
     {
         Gate::authorize('update', $service);
+
+        $service->load('categories');
 
         return view('services.edit', ['service' => $service]);
     }
@@ -74,7 +93,9 @@ class ServiceController extends Controller
     {
         Gate::authorize('update', $service);
 
-        $service->update($request->validated());
+        $service->update($request->safe()->except('categories'));
+
+        $service->categories()->sync($request->validated('categories', []));
 
         return redirect()->route('services.index')->with('success', 'Service updated.');
     }
